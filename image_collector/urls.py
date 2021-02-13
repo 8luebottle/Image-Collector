@@ -2,6 +2,7 @@ from urllib.parse import urlunparse, ParseResult
 
 from confs.config import confs
 from image_collector.constants import PageName
+from logs.log import Log
 
 
 Site = confs["site"]
@@ -24,6 +25,10 @@ class Url:
             query = "pageid=36"
         if page_name == PageName.PIC:
             path = Site.data_directory() + Site.picture()
+        if page_name == PageName.DETAIL:
+            sub_dir = Site.product_detail()
+            path = directory + sub_dir
+            query = "gid="
 
         url = ParseResult(
             scheme=Site.scheme(),
@@ -34,3 +39,7 @@ class Url:
             fragment="",
         )
         return urlunparse(url)
+
+
+# class PageNum:
+#     # TODO : Check start - end page#

@@ -27,6 +27,9 @@ class Site:
     def product(self):
         return self._sys_dir["product"]
 
+    def product_detail(self):
+        return self._sys_dir["product_detail"]
+
     def manual(self):
         return self._sys_dir["manual"]
 
@@ -44,14 +47,23 @@ class Tag:
     def box(self):
         return self._tag["box"]
 
-    def img(self):
-        return self._tag["img"]
-
     def model(self):
         return self._tag["model"]
 
+    def product_img(self):
+        return self._tag["product_image"]
+
+    def product_info(self):
+        return self._tag["product_info"]
+
+    def product_name(self):
+        return self._tag["product_name"]
+
     def price(self):
         return self._tag["price"]
+
+    def last_page(self):
+        return self._tag["last_page"]
 
 
 confs = {

@@ -12,5 +12,5 @@ class Log:
     ic.configureOutput(prefix=timestamped_printer())
 
     @staticmethod
-    def say(about="", message=""):
-        ic(about, message)
+    def say(about="", detail=""):
+        ic(about, detail)
