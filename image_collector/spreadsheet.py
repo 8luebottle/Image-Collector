@@ -1,9 +1,11 @@
 # Convert HTML product info to CSV
-from bs4 import BeautifulSoup
+import csv
 import urllib3
+import os
+from bs4 import BeautifulSoup
 
 from confs.config import confs
-from image_collector.constants import PageName, Tag
+from image_collector.constants import File, Folder, PageName, Tag
 from image_collector.urls import Url
 from logs.log import Log
 
@@ -17,6 +19,7 @@ class Csv:
         self.prod_url = Url.page(PageName.PROD)
         self.prod_detail_url = Url.page(PageName.DETAIL)
         self.want = ["가격", "내부 사이즈", "외부 사이즈", "무게"]
+        self.header = ["모델"] + self.want
         self.prefix = Site.data_directory() + Site.picture()
         self.suffix = ".jpg"
 
@@ -70,28 +73,71 @@ class Csv:
 
                 data_rows.append(cell)
 
+        title_rows[:] = [ele for ele in title_rows if ele]  # remove empty string
         return title_rows, data_rows
 
     def normalize_data(self, data_array, title_array):
         key, value = (0, 1)
         nor_list = list()  # normalized list
-        for data in data_array:
+        for data in data_array:  # generate model name list
             if data[key] in self.want:
                 nor_dict = dict()
                 if data[value]:
                     nor_dict[data[key]] = data[value]
                 nor_list.append(nor_dict)
 
-        fin_dict = dict()  # finalized list
-        for i, title in enumerate(title_array):
-            if title:
-                fin_dict[title] = nor_list[i: i + len(self.want)]
+        finalized_list = []
+        for i, title in enumerate(title_array):  # generate detail info of a model
+            temp_dict = dict()
+            finalized_list.append(title)
+            temp = nor_list[i: i+len(self.want)]
+            for v in temp:
+                temp_dict.update(v)
 
-        return fin_dict
+            finalized_list.append(temp_dict)
+        Log.say("finalized list", finalized_list)
+        return finalized_list
 
-    # TODO : CSV Generator
+    def generate_2d_list(self, data_list, title_list):
+        Log.say("generate 2d list")
+        two_d_list = list()
+        for data in data_list:
+            if type(data) == dict:
+                columns = self.header
+                temp_list = ["", "", "", "", ""]
+                for k, v in data.items():
+                    ind = columns.index(k)
+                    temp_list[ind] = v
+                two_d_list.append(temp_list)
+
+        for i, title in enumerate(title_list):
+            two_d_list[i][0] = title
+
+        return two_d_list
+
+    def generate_csv(self, two_d_list):
+        Log.say("generate CSV")
+
+        if not os.path.exists(Folder.PROD_NAME):
+            Log.say("Create new folder")
+            os.mkdir(Folder.PROD_NAME)
+
+        Log.say("open csv file", File.CSV)
+        file = open(Folder.PROD_PATH + File.CSV, "w+", newline="")
+
+        Log.say("start to write data")
+        writer = csv.writer(file, delimiter=",")
+        writer.writerow(self.header)
+        writer.writerows(two_d_list)
+        Log.say("successfully write data to CSV")
+
+        file.close()
+        Log.say("save and close", File.CSV)
 
 
 c = Csv()
 glist = c.extract_gid_list()
 titles, csv_data = c.get_prd_detail(glist)
+normalized_list = c.normalize_data(csv_data, titles)
+rows = c.generate_2d_list(normalized_list, titles)
+c.generate_csv(rows)

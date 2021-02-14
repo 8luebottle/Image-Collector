@@ -2,6 +2,11 @@ class File:
     CSV = "product_info.csv"
 
 
+class Folder:
+    PROD_NAME = "products"
+    PROD_PATH = "../" + PROD_NAME + "/"
+
+
 class PageName:
     DETAIL = "detail"
     HOME = "home"
