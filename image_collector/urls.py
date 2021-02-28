@@ -2,13 +2,11 @@ from urllib.parse import urlunparse, ParseResult
 
 from confs.config import confs
 from image_collector.constants import PageName
-from logs.log import Log
 
 
 Site = confs["site"]
 
 
-# TODO : add paging
 class Url:
     @staticmethod
     def page(page_name=""):
@@ -39,7 +37,3 @@ class Url:
             fragment="",
         )
         return urlunparse(url)
-
-
-# class PageNum:
-#     # TODO : Check start - end page#

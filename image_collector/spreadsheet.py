@@ -2,10 +2,12 @@
 import csv
 import urllib3
 import os
+import itertools
 from bs4 import BeautifulSoup
 
 from confs.config import confs
 from image_collector.constants import File, Folder, PageName, Tag
+from image_collector.pagination import Pagination
 from image_collector.urls import Url
 from logs.log import Log
 
@@ -23,22 +25,31 @@ class Csv:
         self.prefix = Site.data_directory() + Site.picture()
         self.suffix = ".jpg"
 
-    def extract_gid_list(self):
-        Log.say("extract gid list", "from %s" % self.prod_url)
-        resp = http.request("GET", self.prod_url)
-        soup = BeautifulSoup(resp.data, features="html.parser")  # all contents
-        products = soup.findAll(Tag.DIV, {Tag.CLASS: Tag.PROD_IMG})
-        Log.say("total product", len(products))
-
+    def extract_gid_list(self, url_list=[]):
         gid_list = []
-        for tag in products:
-            src = tag.findChild(Tag.IMG)["src"]
-            file_name = src.lstrip(self.prefix)
-            gid = file_name.rstrip(self.suffix)
-            gid_list.append(gid)
+        if not url_list:
+            url_list = self.prod_url
 
-        Log.say("extract complete", gid_list)
-        return gid_list
+        for url in url_list:
+            Log.say("start to extract gid list", "from %s" % url)
+            resp = http.request("GET", url)
+            soup = BeautifulSoup(resp.data, features="html.parser")  # all contents
+            products = soup.findAll(Tag.DIV, {Tag.CLASS: Tag.PROD_IMG})
+            Log.say("total product", len(products))
+
+            prd_ids = []
+            for tag in products:
+                src = tag.findChild(Tag.IMG)["src"]
+                file_name = src.lstrip(self.prefix)
+                gid = file_name.rstrip(self.suffix)
+                prd_ids.append(gid)
+            Log.say("extract complete", prd_ids)
+
+            prd_ids = list(filter(None, prd_ids))  # remove empty string form prd_ids
+            gid_list.append(prd_ids)
+
+        flatten_gids = list(itertools.chain(*gid_list))  # flatten two-dimensional list
+        return flatten_gids
 
     def get_prd_detail(self, gid_list):
         Log.say("get product detail", "from %s" % self.prod_detail_url)
@@ -90,7 +101,7 @@ class Csv:
         for i, title in enumerate(title_array):  # generate detail info of a model
             temp_dict = dict()
             finalized_list.append(title)
-            temp = nor_list[i: i+len(self.want)]
+            temp = nor_list[i : i + len(self.want)]
             for v in temp:
                 temp_dict.update(v)
 
@@ -115,15 +126,17 @@ class Csv:
 
         return two_d_list
 
-    def generate_csv(self, two_d_list):
-        Log.say("generate CSV")
+    def create_csv_file(self, two_d_list):
+        Log.say("create CSV file")
 
+        file_path = Folder.PROD_PATH + File.CSV
+        file_path = os.path.join(os.path.dirname(__file__), file_path)
         if not os.path.exists(Folder.PROD_NAME):
             Log.say("Create new folder")
             os.mkdir(Folder.PROD_NAME)
 
         Log.say("open csv file", File.CSV)
-        file = open(Folder.PROD_PATH + File.CSV, "w+", newline="")
+        file = open(file_path, "w+", newline="")
 
         Log.say("start to write data")
         writer = csv.writer(file, delimiter=",")
@@ -135,9 +148,11 @@ class Csv:
         Log.say("save and close", File.CSV)
 
 
-c = Csv()
-glist = c.extract_gid_list()
-titles, csv_data = c.get_prd_detail(glist)
-normalized_list = c.normalize_data(csv_data, titles)
-rows = c.generate_2d_list(normalized_list, titles)
-c.generate_csv(rows)
+def generate_csv():
+    c = Csv()
+    url_list = Pagination.extract_prod_link_list(Url.page(PageName.PROD))
+    gid_list = c.extract_gid_list(url_list=url_list)
+    titles, csv_data = c.get_prd_detail(gid_list)
+    normalized_list = c.normalize_data(csv_data, titles)
+    rows = c.generate_2d_list(normalized_list, titles)
+    c.create_csv_file(rows)
