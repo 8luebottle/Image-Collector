@@ -1,8 +1,8 @@
 # Convert HTML product info to CSV
 import csv
-import urllib3
-import os
 import itertools
+import os
+import urllib3
 from bs4 import BeautifulSoup
 
 from confs.config import confs
@@ -32,6 +32,7 @@ class Csv:
 
         for url in url_list:
             Log.say("start to extract gid list", "from %s" % url)
+
             resp = http.request("GET", url)
             soup = BeautifulSoup(resp.data, features="html.parser")  # all contents
             products = soup.findAll(Tag.DIV, {Tag.CLASS: Tag.PROD_IMG})
@@ -88,6 +89,8 @@ class Csv:
         return title_rows, data_rows
 
     def normalize_data(self, data_array, title_array):
+        Log.say("data normalization")
+
         key, value = (0, 1)
         nor_list = list()  # normalized list
         for data in data_array:  # generate model name list
@@ -111,6 +114,7 @@ class Csv:
 
     def generate_2d_list(self, data_list, title_list):
         Log.say("generate 2d list")
+
         two_d_list = list()
         for data in data_list:
             if type(data) == dict:
@@ -128,7 +132,6 @@ class Csv:
 
     def create_csv_file(self, two_d_list):
         Log.say("create CSV file")
-
         file_path = Folder.PROD_PATH + File.CSV
         file_path = os.path.join(os.path.dirname(__file__), file_path)
         if not os.path.exists(Folder.PROD_NAME):
@@ -150,9 +153,11 @@ class Csv:
 
 def generate_csv():
     c = Csv()
+
     url_list = Pagination.extract_prod_link_list(Url.page(PageName.PROD))
     gid_list = c.extract_gid_list(url_list=url_list)
     titles, csv_data = c.get_prd_detail(gid_list)
     normalized_list = c.normalize_data(csv_data, titles)
     rows = c.generate_2d_list(normalized_list, titles)
+
     c.create_csv_file(rows)

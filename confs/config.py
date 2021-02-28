@@ -1,5 +1,4 @@
 import yaml
-
 from pathlib import Path
 
 p = Path(__file__).resolve()
