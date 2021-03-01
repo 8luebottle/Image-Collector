@@ -1,10 +1,17 @@
+from pathlib import Path
+
+parent = str(Path(__file__).absolute().parent)
+
+
 class File:
     CSV = "product_info.csv"
 
 
 class Folder:
     PROD_NAME = "products"
-    PROD_PATH = "../" + PROD_NAME + "/"
+    PROD_PATH = parent + "/" + PROD_NAME
+    IMG_NAME = "images"
+    IMG_PATH = parent + "/" + IMG_NAME
 
 
 class PageName:

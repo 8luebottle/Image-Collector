@@ -1,22 +1,28 @@
-from bs4 import *
-import urllib3
-
 from image_collector.constants import PageName, Tag
-from image_collector.urls import Url
+from image_collector.urls import PageUrl
+from image_collector.utils import get_soup
 
-http = urllib3.PoolManager()
-prod_url = Url.page(PageName.PROD)
-pic_url = Url.page(PageName.PIC)
-resp = http.request("GET", prod_url)
-soup = BeautifulSoup(resp.data, features="html.parser")  # all contents
+pic_url = PageUrl.pictures()
+soup = get_soup(PageName.PROD)
 
 
 class Crawler:
     def __init__(self):
         self.prod_info = soup.findAll(Tag.DIV, {Tag.CLASS: Tag.BOX})
-        self.prod_name = soup.findAll(Tag.P, {Tag.CLASS: Tag.MODEL})
-        self.prod_image = soup.find_all(Tag.IMG, class_=Tag.PROD_IMG)
+        self.prod_name = soup.findAll(Tag.P, {Tag.CLASS: Tag.PROD_NAME})
+        self.prod_image = soup.find_all(
+            Tag.IMG, class_=Tag.PROD_IMG
+        )  # TODO : update me
+        self.prod_price = soup.findAll(Tag.P, {Tag.CLASS: Tag.PRICE})
 
-    def info(self):
+    def prod_info(self):
         return self.prod_info
-        # prod_price = soup.find_all(Tag.P, {Tag.CLASS: Tag.PRICE})
+
+    def prod_name(self):
+        return self.prod_name
+
+    def prod_image(self):
+        return self.prod_image
+
+    def prod_price(self):
+        return self.prod_price

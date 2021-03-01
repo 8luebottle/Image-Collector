@@ -37,3 +37,17 @@ class Url:
             fragment="",
         )
         return urlunparse(url)
+
+
+class PageUrl:
+    @staticmethod
+    def products():
+        return Url.page(PageName.PROD)
+
+    @staticmethod
+    def pictures():
+        return Url.page(PageName.PIC)
+
+    @staticmethod
+    def details():
+        return Url.page(PageName.DETAIL)

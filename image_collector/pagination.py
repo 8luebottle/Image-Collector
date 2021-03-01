@@ -1,15 +1,10 @@
 import re
-import urllib3
-from bs4 import *
 
 from image_collector.constants import PageName, Tag
-from image_collector.urls import Url
+from image_collector.utils import get_soup
 from logs.log import Log
 
-http = urllib3.PoolManager()
-prod_url = Url.page(PageName.PROD)
-resp = http.request("GET", prod_url)
-soup = BeautifulSoup(resp.data, features="html.parser")
+soup = get_soup(PageName.PROD)
 
 
 class Pagination:
